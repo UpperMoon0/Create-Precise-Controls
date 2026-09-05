@@ -4,8 +4,11 @@
   "package": "com.nstut.createprecisecontrols.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "AbstractSimiScreenAccessor",
     "FactoryPanelScreenMixin",
-    "compat.factorycontroller.ConfigureRecipeScreenMixin"
+    "ValueSettingsScreenMixin",
+    "compat.factorycontroller.ConfigureRecipeScreenMixin",
+    "compat.fluidlogistics.ResourceFactoryGaugeScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,0 +1,20 @@
+{
+  "createprecisecontrols.screen.ingredient_amount": "Exact ingredient amount",
+  "createprecisecontrols.screen.output_amount": "Exact output amount",
+  "createprecisecontrols.screen.fluid_ingredient_amount": "Exact ingredient amount (mB)",
+  "createprecisecontrols.screen.fluid_output_amount": "Exact output amount (mB)",
+  "createprecisecontrols.screen.resource_ingredient_amount": "Exact ingredient amount (%s)",
+  "createprecisecontrols.screen.resource_output_amount": "Exact output amount (%s)",
+  "createprecisecontrols.screen.resource_target": "Exact target amount (%s)",
+  "createprecisecontrols.screen.restock_threshold": "Exact restock threshold (%s)",
+  "createprecisecontrols.screen.additional_stock": "Exact additional stock (%s)",
+  "createprecisecontrols.screen.factory_target": "Exact target (%s)",
+  "createprecisecontrols.screen.request_multiplier": "Exact request multiplier",
+  "createprecisecontrols.screen.request_interval": "Exact request interval (seconds)",
+  "createprecisecontrols.screen.promise_limit": "Exact open-request limit",
+  "createprecisecontrols.screen.craft_batch": "Exact craft batch",
+  "createprecisecontrols.screen.exact_value": "Exact value",
+  "createprecisecontrols.screen.range": "Range: %s - %s",
+  "createprecisecontrols.screen.invalid": "Enter a whole number from %s to %s",
+  "createprecisecontrols.hint.middle_click_exact": "Middle-click to type an exact value"
+}
