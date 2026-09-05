@@ -3,7 +3,6 @@ package com.nstut.createprecisecontrols.mixin;
 import com.nstut.createprecisecontrols.client.ExactAmountScreen;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelScreen;
-import net.createmod.catnip.gui.AbstractSimiScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -28,9 +27,9 @@ public abstract class FactoryPanelScreenMixin {
         if (button != 1 || craftingActive) return;
 
         Screen screen = (Screen) (Object) this;
-        AbstractSimiScreen simi = (AbstractSimiScreen) (Object) this;
-        int x = simi.getGuiLeft();
-        int y = simi.getGuiTop();
+        AbstractSimiScreenAccessor layout = (AbstractSimiScreenAccessor) (Object) this;
+        int x = layout.createprecisecontrols$getGuiLeft();
+        int y = layout.createprecisecontrols$getGuiTop();
 
         for (int i = 0; i < inputConfig.size(); i++) {
             int inputX = x + 68 + (i % 3 * 20);
@@ -46,9 +45,7 @@ public abstract class FactoryPanelScreenMixin {
         }
 
         if (restocker) return;
-        int outputX = x + 160;
-        int outputY = y + 48;
-        if (inside(mouseX, mouseY, outputX, outputY, 16, 16)) {
+        if (inside(mouseX, mouseY, x + 160, y + 48, 16, 16)) {
             Minecraft.getInstance().setScreen(new ExactAmountScreen(screen,
                     Component.literal("Exact output amount"), outputConfig.count, 1, 64,
                     value -> outputConfig.count = value));
