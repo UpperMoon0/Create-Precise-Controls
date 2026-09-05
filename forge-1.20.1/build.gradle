@@ -1,0 +1,63 @@
+plugins {
+    id 'java-library'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'idea'
+}
+
+version = mod_version
+group = mod_group_id
+base { archivesName = "create-precise-controls-forge-${minecraft_version}" }
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+sourceSets.main.java.srcDir rootProject.file('common/src/main/java')
+sourceSets.main.java.srcDir rootProject.file('shared/src/main/java')
+sourceSets.main.resources.srcDir rootProject.file('shared/src/main/resources')
+
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+    copyIdeResources = true
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'info'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            mods { "${mod_id}" { source sourceSets.main } }
+        }
+        client {}
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.createmod.net' }
+    maven { url = 'https://maven.tterrag.com/' }
+    maven { url = 'https://maven.blamejared.com' }
+    maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    implementation fg.deobf("com.simibubi.create:create-1.20.1:${create_version}")
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('META-INF/mods.toml') {
+        expand version: project.version,
+                mod_id: mod_id, mod_name: mod_name, mod_license: mod_license,
+                mod_authors: mod_authors, mod_description: mod_description,
+                mod_url: mod_url, mod_issues_url: mod_issues_url,
+                loader_version_range: loader_version_range,
+                forge_version_range: forge_version_range,
+                minecraft_version_range: minecraft_version_range
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    manifest {
+        attributes('MixinConfigs': 'createprecisecontrols.mixins.json')
+    }
+    finalizedBy 'reobfJar'
+}
