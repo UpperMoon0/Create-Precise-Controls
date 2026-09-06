@@ -16,5 +16,5 @@
   "createprecisecontrols.screen.exact_value": "Exact value",
   "createprecisecontrols.screen.range": "Range: %s - %s",
   "createprecisecontrols.screen.invalid": "Enter a whole number from %s to %s",
-  "createprecisecontrols.hint.middle_click_exact": "Middle-click to type an exact value"
+  "createprecisecontrols.hint.right_click_exact": "Right-click to type an exact value"
 }

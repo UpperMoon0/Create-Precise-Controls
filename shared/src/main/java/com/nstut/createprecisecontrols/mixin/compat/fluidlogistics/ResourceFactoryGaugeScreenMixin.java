@@ -41,21 +41,20 @@ public abstract class ResourceFactoryGaugeScreenMixin {
     private static final int OUTPUT_X = 160;
     private static final int OUTPUT_Y = 48;
     private static final int RIGHT_BUTTON = 1;
-    private static final int MIDDLE_BUTTON = 2;
     private static boolean reflectionFailureLogged;
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private void createprecisecontrols$openFluidLogisticsAmount(double mouseX, double mouseY, int button,
                                                                  CallbackInfoReturnable<Boolean> cir) {
-        if (button != RIGHT_BUTTON && button != MIDDLE_BUTTON) return;
+        if (button != RIGHT_BUTTON) return;
 
         try {
             Object self = this;
             Screen screen = (Screen) self;
 
             // The current FluidLogistics resource screen exposes several raw integer ScrollInputs.
-            // MMB can type those exactly; use each widget's own min/max instead of duplicating policy.
-            if (button == MIDDLE_BUTTON && openResourceScrollInput(self, screen, mouseX, mouseY)) {
+            // RMB can type those exactly; use each widget's own min/max instead of duplicating policy.
+            if (openResourceScrollInput(self, screen, mouseX, mouseY)) {
                 cir.setReturnValue(true);
                 return;
             }

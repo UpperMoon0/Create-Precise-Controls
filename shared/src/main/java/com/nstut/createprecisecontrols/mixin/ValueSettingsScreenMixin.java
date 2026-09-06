@@ -39,7 +39,7 @@ public abstract class ValueSettingsScreenMixin extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE && isFactoryGauge() && supportsExactTarget()) {
+        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT && isFactoryGauge() && supportsExactTarget()) {
             ValueSettings hovered = getClosestCoordinate((int) mouseX, (int) mouseY);
             int row = hovered.row();
             int initial = hovered.value();
@@ -99,7 +99,7 @@ public abstract class ValueSettingsScreenMixin extends Screen {
         if (!isFactoryGauge() || !supportsExactTarget()) return;
         AbstractSimiScreenAccessor layout = (AbstractSimiScreenAccessor) (Object) this;
         int additionalHeight = iconMode ? 46 : 33;
-        Component hint = Component.translatable("createprecisecontrols.hint.middle_click_exact");
+        Component hint = Component.translatable("createprecisecontrols.hint.right_click_exact");
         int centerX = layout.createprecisecontrols$getGuiLeft() + layout.createprecisecontrols$getWindowWidth() / 2;
         int y = layout.createprecisecontrols$getGuiTop() + layout.createprecisecontrols$getWindowHeight()
                 + additionalHeight - 15;

@@ -15,16 +15,16 @@ Create: Factory Controller and Create: FluidLogistics integrations are optional.
 
 ### Create Factory Gauge
 
-- **Middle-click the target-amount value board** to type an exact Items or Stacks target. Large values are supported beyond Create's 0-100 picker range, with a safe cap that prevents the resulting demand from overflowing Create's integer count model.
-- **Right-click or middle-click a recipe ingredient** to type its exact count.
-- **Right-click or middle-click the recipe output** to type its exact count.
+- **Right-click the target-amount value board** to type an exact Items or Stacks target. Large values are supported beyond Create's 0-100 picker range, with a safe cap that prevents the resulting demand from overflowing Create's integer count model.
+- **Right-click a recipe ingredient** to type its exact count.
+- **Right-click the recipe output** to type its exact count.
 - Normal scrolling, Shift-scrolling, and Create's existing clicks are unchanged.
 
 ### Create: FluidLogistics
 
 When FluidLogistics is installed:
 
-- **Right-click or middle-click a resource recipe ingredient/output** to type the raw amount directly. Fluid recipes therefore accept values such as `1440 mB` without mouse-wheel stepping.
+- **Right-click a resource recipe ingredient/output** to type the raw amount directly. Fluid recipes therefore accept values such as `1440 mB` without mouse-wheel stepping.
 - Precise Controls asks FluidLogistics' `PackageResources` / `PackageResourceDisplay` API for the resource unit and `maxRequestPerBatch`. Fluid caps are not hardcoded in this mod.
 - FluidLogistics 1.2.6 modifies Create's normal `FactoryPanelScreen`; that path is enhanced in place.
 - FluidLogistics 1.2.9+ uses its own `ResourceFactoryGaugeScreen`; the optional compatibility mixin handles that screen as well, including exact target, restock-threshold, additional-stock, and promise-limit controls when present.
@@ -33,12 +33,12 @@ When FluidLogistics is installed:
 
 When Factory Controller is installed on NeoForge 1.21.1:
 
-- **Right-click or middle-click a REGULAR ingredient** for an exact item or fluid amount.
-- **Right-click or middle-click a non-crafting output** for an exact item or fluid amount.
-- **Right-click or middle-click the crafting output** to type the craft batch directly.
-- **Middle-click the request multiplier** to type an exact multiplier within the controller's current structural cap.
-- **Middle-click the request interval arrow** to type an exact interval from 1 to 60 seconds.
-- **Middle-click the open-request limit** to type a value from 0 to 99.
+- **Right-click a REGULAR ingredient** for an exact item or fluid amount.
+- **Right-click a non-crafting output** for an exact item or fluid amount.
+- **Right-click the crafting output** to type the craft batch directly.
+- **Right-click the request multiplier** to type an exact multiplier within the controller's current structural cap.
+- **Right-click the request interval arrow** to type an exact interval from 1 to 60 seconds.
+- **Right-click the open-request limit** to type a value from 0 to 99.
 
 Fluid values use the units and limits defined by Factory Controller itself: up to 90,000 mB per regular fluid ingredient and 64,000 mB for fluid output. Factory Controller's target/threshold field already supports native click-to-type input, so Precise Controls deliberately does not replace it.
 

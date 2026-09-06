@@ -49,14 +49,13 @@ public abstract class ConfigureRecipeScreenMixin {
     private static final int MAX_PROMISE_LIMIT = 99;
     private static final int TICKS_PER_SECOND = 20;
     private static final int RIGHT_BUTTON = 1;
-    private static final int MIDDLE_BUTTON = 2;
     private static boolean reflectionFailureLogged;
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false, require = 0)
     private void createprecisecontrols$openFactoryControllerAmount(double mouseX, double mouseY, int button,
                                                                     CallbackInfoReturnable<Boolean> cir) {
-        // RMB is used only where CFC itself has no right-click action; MMB is the universal precise-entry gesture.
-        if (button != RIGHT_BUTTON && button != MIDDLE_BUTTON) return;
+        // Right-click is the single precise-entry gesture wherever CFC itself has no RMB action.
+        if (button != RIGHT_BUTTON) return;
 
         try {
             Object self = this;
@@ -65,39 +64,36 @@ public abstract class ConfigureRecipeScreenMixin {
             String mode = String.valueOf(getField(self, "workMode"));
             Screen screen = (Screen) self;
 
-            if (button == MIDDLE_BUTTON) {
-                if (inside(mouseX, mouseY, panelX + MULTIPLIER_X, panelY + MULTIPLIER_Y,
-                        MULTIPLIER_W, MULTIPLIER_H)) {
-                    int current = getInt(self, "maxRequestMultiplier");
-                    int max = Math.max(1, ((Number) invoke(self, "structuralMultiplierCap")).intValue());
-                    open(screen, Component.translatable("createprecisecontrols.screen.request_multiplier"),
-                            current, 1, max, value -> setIntUnchecked(self, "maxRequestMultiplier", value));
-                    cir.setReturnValue(true);
-                    return;
-                }
-
-                if (inside(mouseX, mouseY, panelX + INTERVAL_X, panelY + INTERVAL_Y,
-                        INTERVAL_W, INTERVAL_H)) {
-                    int current = ((Number) invoke(self, "shownIntervalSeconds")).intValue();
-                    open(screen, Component.translatable("createprecisecontrols.screen.request_interval"),
-                            current, 1, MAX_INTERVAL_SECONDS,
-                            value -> invokeUnchecked(self, "setRequestInterval", value * TICKS_PER_SECOND));
-                    cir.setReturnValue(true);
-                    return;
-                }
-
-                if (inside(mouseX, mouseY, panelX + PROMISE_LIMIT_X,
-                        panelY + PANEL_H - PROMISE_LIMIT_Y_FROM_BOTTOM,
-                        PROMISE_LIMIT_W, PROMISE_LIMIT_H)) {
-                    int current = Math.max(0, getInt(self, "promiseLimitState"));
-                    open(screen, Component.translatable("createprecisecontrols.screen.promise_limit"),
-                            current, 0, MAX_PROMISE_LIMIT,
-                            value -> setIntUnchecked(self, "promiseLimitState", value));
-                    cir.setReturnValue(true);
-                    return;
-                }
+            if (inside(mouseX, mouseY, panelX + MULTIPLIER_X, panelY + MULTIPLIER_Y,
+                    MULTIPLIER_W, MULTIPLIER_H)) {
+                int current = getInt(self, "maxRequestMultiplier");
+                int max = Math.max(1, ((Number) invoke(self, "structuralMultiplierCap")).intValue());
+                open(screen, Component.translatable("createprecisecontrols.screen.request_multiplier"),
+                        current, 1, max, value -> setIntUnchecked(self, "maxRequestMultiplier", value));
+                cir.setReturnValue(true);
+                return;
             }
 
+            if (inside(mouseX, mouseY, panelX + INTERVAL_X, panelY + INTERVAL_Y,
+                    INTERVAL_W, INTERVAL_H)) {
+                int current = ((Number) invoke(self, "shownIntervalSeconds")).intValue();
+                open(screen, Component.translatable("createprecisecontrols.screen.request_interval"),
+                        current, 1, MAX_INTERVAL_SECONDS,
+                        value -> invokeUnchecked(self, "setRequestInterval", value * TICKS_PER_SECOND));
+                cir.setReturnValue(true);
+                return;
+            }
+
+            if (inside(mouseX, mouseY, panelX + PROMISE_LIMIT_X,
+                    panelY + PANEL_H - PROMISE_LIMIT_Y_FROM_BOTTOM,
+                    PROMISE_LIMIT_W, PROMISE_LIMIT_H)) {
+                int current = Math.max(0, getInt(self, "promiseLimitState"));
+                open(screen, Component.translatable("createprecisecontrols.screen.promise_limit"),
+                        current, 0, MAX_PROMISE_LIMIT,
+                        value -> setIntUnchecked(self, "promiseLimitState", value));
+                cir.setReturnValue(true);
+                return;
+            }
             if (inside(mouseX, mouseY, panelX + OUTPUT_X, panelY + OUTPUT_Y, CELL_SIZE, CELL_SIZE)) {
                 if ("CRAFTING".equals(mode)) {
                     int current = Math.max(1, getInt(self, "craftBatch"));

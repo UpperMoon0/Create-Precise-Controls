@@ -36,9 +36,9 @@ public abstract class FactoryPanelScreenMixin {
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false)
     private void createprecisecontrols$openExactAmount(double mouseX, double mouseY, int button,
                                                         CallbackInfoReturnable<Boolean> cir) {
-        // Create uses LMB to remove an ingredient connection. FluidLogistics 1.2.6 also leaves
-        // RMB/MMB free here, so both gestures can open exact entry without replacing native actions.
-        if ((button != 1 && button != 2) || craftingActive || restocker) return;
+        // Create uses LMB to remove an ingredient connection. FluidLogistics 1.2.6 leaves
+        // RMB free here, so right-click opens exact entry without replacing native actions.
+        if (button != 1 || craftingActive || restocker) return;
 
         Screen screen = (Screen) (Object) this;
         AbstractSimiScreenAccessor layout = (AbstractSimiScreenAccessor) (Object) this;
