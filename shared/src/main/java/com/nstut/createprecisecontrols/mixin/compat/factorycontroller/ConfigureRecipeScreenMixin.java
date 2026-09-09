@@ -51,7 +51,7 @@ public abstract class ConfigureRecipeScreenMixin {
     private static final int RIGHT_BUTTON = 1;
     private static boolean reflectionFailureLogged;
 
-    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false, require = 0)
+    @Inject(method = {"mouseClicked", "m_6375_"}, at = @At("HEAD"), cancellable = true, remap = false, require = 0)
     private void createprecisecontrols$openFactoryControllerAmount(double mouseX, double mouseY, int button,
                                                                     CallbackInfoReturnable<Boolean> cir) {
         // Right-click is the single precise-entry gesture wherever CFC itself has no RMB action.

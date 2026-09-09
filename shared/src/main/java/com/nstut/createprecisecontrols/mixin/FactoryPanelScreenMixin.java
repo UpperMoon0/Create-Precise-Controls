@@ -33,7 +33,7 @@ public abstract class FactoryPanelScreenMixin {
     @Shadow private boolean craftingActive;
     @Shadow private boolean restocker;
 
-    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(method = {"mouseClicked", "m_6375_"}, at = @At("HEAD"), cancellable = true, remap = false)
     private void createprecisecontrols$openExactAmount(double mouseX, double mouseY, int button,
                                                         CallbackInfoReturnable<Boolean> cir) {
         // Create uses LMB to remove an ingredient connection. FluidLogistics 1.2.6 leaves

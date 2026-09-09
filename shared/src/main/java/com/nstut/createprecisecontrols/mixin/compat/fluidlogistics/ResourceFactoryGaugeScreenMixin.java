@@ -43,7 +43,7 @@ public abstract class ResourceFactoryGaugeScreenMixin {
     private static final int RIGHT_BUTTON = 1;
     private static boolean reflectionFailureLogged;
 
-    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
+    @Inject(method = {"mouseClicked", "m_6375_"}, at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private void createprecisecontrols$openFluidLogisticsAmount(double mouseX, double mouseY, int button,
                                                                  CallbackInfoReturnable<Boolean> cir) {
         if (button != RIGHT_BUTTON) return;
