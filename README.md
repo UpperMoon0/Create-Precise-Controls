@@ -17,10 +17,10 @@ See [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) for the maintained compatibil
 
 ### Create Factory Gauge
 
-- **Right-click the target-amount value board** to type an exact Items or Stacks target. Large values are supported beyond Create's 0-100 picker range, with a safe cap that prevents the resulting demand from overflowing Create's integer count model.
+- **Hold Use to open the target-amount board, then hold Ctrl and release Use** to type an exact Items or Stacks target. With default controls, Use is RMB. Large values are supported beyond Create's 0-100 picker range, with a safe cap that prevents the resulting demand from overflowing Create's integer count model.
 - **Ctrl+right-click a recipe ingredient** to type its exact count.
 - **Ctrl+right-click the recipe output** to type its exact count.
-- Ordinary left/right clicks, normal scrolling, and Shift-scrolling keep their Create behavior. The modifier is deliberate because Create's ingredient click handler consumes every mouse button even though its tooltip only documents left-click disconnect.
+- Ordinary Use release still commits Create's native target selection. Ordinary left/right clicks, normal scrolling, and Shift-scrolling keep their Create behavior.
 
 ### Create: FluidLogistics
 
@@ -56,14 +56,14 @@ The Forge metadata ignores server-version matching, loader dependencies are clie
 The base integration uses small Mixins against Create's existing GUI classes rather than replacing screens wholesale:
 
 - `FactoryPanelScreenMixin` adds exact entry to Factory Gauge recipe counts and legacy FluidLogistics-injected controls.
-- `ValueSettingsScreenMixin` adds exact target entry only when the value-settings screen belongs to a Factory Gauge.
+- `ValueSettingsScreenMixin` intercepts Create's existing `saveAndClose` Use-release lifecycle only for Ctrl-modified Factory Gauge target entry; it does not wait for a second RMB click.
 - `AbstractSimiScreenAccessor` reads layout fields from the Catnip superclass where those fields are actually declared.
 - `ScrollInputAccessor` reads the range already configured by Create/addon widgets rather than duplicating it.
 - Loader-specific `ValueSettingsSender` classes bridge Create 1.20.1 and 1.21.1 networking while keeping the UI code shared.
 
 Factory Controller has its own recipe screen instead of using Create's `FactoryPanelScreen`. Its integration is therefore isolated in an optional `@Pseudo` compatibility mixin. FluidLogistics is handled through its public package-resource display API plus an optional `@Pseudo` mixin for its newer dedicated resource-gauge screen. Neither addon is linked as a required dependency.
 
-CI pins the supported FluidLogistics and Factory Controller source revisions and verifies the private/source contracts used by optional reflection and mixin compatibility. A dependency layout change therefore fails CI instead of silently compiling a broken optional bridge.
+CI pins Create 6.0.8/6.0.11 plus the supported FluidLogistics and Factory Controller source revisions. It verifies Create's hold-Use/open/release/save lifecycle as well as the private/source contracts used by optional reflection and mixin compatibility. Shared regression tests verify that Ctrl-modified Factory Gauge release diverts to the exact editor while ordinary release remains Create-owned.
 
 For the design boundaries and extension rules, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 

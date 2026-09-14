@@ -8,10 +8,10 @@ Stop fighting scroll wheels for exact Create values.
 
 ### Create Factory Gauge
 
-- Right-click the target-amount value board and type an exact Items or Stacks target.
+- Hold Use to open the target board, then hold Ctrl and release Use to type an exact Items or Stacks target. With default controls, Use is right-click.
 - Ctrl+right-click recipe ingredients and outputs to enter exact counts without replacing Create's ordinary click behavior.
 - Enter stock targets beyond Create's normal 0-100 picker range, with overflow-safe limits.
-- Keep using normal clicking, scrolling, and Shift-scrolling whenever you prefer.
+- Ordinary Use release still performs Create's normal target confirmation.
 
 ### Create: FluidLogistics compatibility
 

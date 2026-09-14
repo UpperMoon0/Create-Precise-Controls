@@ -49,12 +49,28 @@ jobs:
           ./gradlew :common:test '${{ matrix.task }}' --no-daemon --no-configuration-cache
 
   compatibility-contracts:
-    name: Optional addon contracts
+    name: Source contracts
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - name: Checkout Precise Controls
         uses: actions/checkout@v5
+
+      - name: Checkout Create 6.0.8
+        uses: actions/checkout@v5
+        with:
+          repository: Creators-of-Create/Create
+          ref: 616296195dcce4ff11b46c3b242c1ac8ce143297
+          path: .compat/create-6.0.8
+          persist-credentials: false
+
+      - name: Checkout Create 6.0.11
+        uses: actions/checkout@v5
+        with:
+          repository: Creators-of-Create/Create
+          ref: 0924e93639ad5f61cfc39a221d909e16f2893df1
+          path: .compat/create-6.0.11
+          persist-credentials: false
 
       - name: Checkout FluidLogistics 1.2.6
         uses: actions/checkout@v5
@@ -80,9 +96,11 @@ jobs:
           path: .compat/create-factory-controller
           persist-credentials: false
 
-      - name: Verify optional addon source contracts
+      - name: Verify source contracts
         run: |
           python3 scripts/verify_compat_contracts.py \
+            --create-608 .compat/create-6.0.8 \
+            --create-6011 .compat/create-6.0.11 \
             --fluid-126 .compat/fluidlogistics-1.2.6 \
             --fluid-129 .compat/fluidlogistics-1.2.9 \
             --factory-controller .compat/create-factory-controller

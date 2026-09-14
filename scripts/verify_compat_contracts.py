@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the source contracts used by optional compatibility mixins."""
+"""Verify the source contracts used by Create and optional compatibility mixins."""
 
 from __future__ import annotations
 
@@ -17,13 +17,52 @@ def require(path: Path, markers: list[str]) -> None:
         raise SystemExit(f"compatibility contract changed in {path}:\n{details}")
 
 
+def forbid(path: Path, markers: list[str]) -> None:
+    if not path.is_file():
+        raise SystemExit(f"missing compatibility source: {path}")
+    text = path.read_text(encoding="utf-8")
+    present = [marker for marker in markers if marker in text]
+    if present:
+        details = "\n".join(f"  - {marker}" for marker in present)
+        raise SystemExit(f"forbidden stale interaction path found in {path}:\n{details}")
+
+
+def verify_create_value_settings(root: Path) -> None:
+    package = root / "src/main/java/com/simibubi/create/foundation/blockEntity/behaviour"
+    require(
+        package / "ValueSettingsClient.java",
+        [
+            "if (!mc.options.keyUse.isDown()) {",
+            "if (interactHeldTicks++ < 5)",
+            "ScreenOpener.open(new ValueSettingsScreen(",
+        ],
+    )
+    require(
+        package / "ValueSettingsScreen.java",
+        [
+            "public boolean keyReleased(int pKeyCode, int pScanCode, int pModifiers)",
+            "minecraft.options.keyUse.matches(pKeyCode, pScanCode)",
+            "saveAndClose(x, y);",
+            "public boolean mouseReleased(double pMouseX, double pMouseY, int pButton)",
+            "minecraft.options.keyUse.matchesMouse(pButton)",
+            "saveAndClose(pMouseX, pMouseY);",
+            "protected void saveAndClose(double pMouseX, double pMouseY)",
+        ],
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--self", dest="self_root", type=Path, default=Path("."))
+    parser.add_argument("--create-608", type=Path, required=True)
+    parser.add_argument("--create-6011", type=Path, required=True)
     parser.add_argument("--fluid-126", type=Path, required=True)
     parser.add_argument("--fluid-129", type=Path, required=True)
     parser.add_argument("--factory-controller", type=Path, required=True)
     args = parser.parse_args()
+
+    verify_create_value_settings(args.create_608)
+    verify_create_value_settings(args.create_6011)
 
     require(
         args.fluid_126 / "src/main/java/com/yision/fluidlogistics/mixin/client/FactoryPanelScreenMixin.java",
@@ -109,6 +148,19 @@ def main() -> None:
         / "shared/src/main/java/com/nstut/createprecisecontrols/mixin/FactoryPanelScreenMixin.java",
         ["Screen.hasControlDown()", "fluidlogistics$restockThresholdInput"],
     )
+    value_settings_mixin = (
+        args.self_root
+        / "shared/src/main/java/com/nstut/createprecisecontrols/mixin/ValueSettingsScreenMixin.java"
+    )
+    require(
+        value_settings_mixin,
+        [
+            '@Inject(method = "saveAndClose"',
+            "ExactTargetRelease.decide(Screen.hasControlDown()",
+            "createprecisecontrols$openExactTargetOnUseRelease",
+        ],
+    )
+    forbid(value_settings_mixin, ["mouseClicked(", "GLFW_MOUSE_BUTTON_RIGHT"])
     require(
         args.self_root
         / "shared/src/main/java/com/nstut/createprecisecontrols/mixin/compat/factorycontroller/ConfigureRecipeScreenMixin.java",
@@ -120,7 +172,7 @@ def main() -> None:
         ["Screen.hasControlDown()", "ScrollInputAccessor"],
     )
 
-    print("Optional-addon compatibility source contracts verified.")
+    print("Create lifecycle and optional-addon source contracts verified.")
 
 
 if __name__ == "__main__":

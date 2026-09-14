@@ -1,5 +1,6 @@
 package com.nstut.createprecisecontrols.mixin;
 
+import com.nstut.createprecisecontrols.ExactTargetRelease;
 import com.nstut.createprecisecontrols.client.ExactAmountScreen;
 import com.nstut.createprecisecontrols.compat.fluidlogistics.FluidLogisticsCompat;
 import com.nstut.createprecisecontrols.platform.ValueSettingsSender;
@@ -17,7 +18,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,22 +37,33 @@ public abstract class ValueSettingsScreenMixin extends Screen {
     @Shadow private boolean iconMode;
     @Shadow public abstract ValueSettings getClosestCoordinate(int mouseX, int mouseY);
 
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT && isFactoryGauge() && supportsExactTarget()) {
-            ValueSettings hovered = getClosestCoordinate((int) mouseX, (int) mouseY);
-            int row = hovered.row();
-            int initial = hovered.value();
-            int max = maxSafeValue(row);
-            Component unit = row >= 0 && row < board.rows().size()
-                    ? board.rows().get(row) : Component.empty();
-            Minecraft.getInstance().setScreen(new ExactAmountScreen(null,
-                    Component.translatable("createprecisecontrols.screen.factory_target", unit),
-                    initial, 0, max,
-                    value -> ValueSettingsSender.send(pos, row, value, netId)));
-            return true;
-        }
-        return super.mouseClicked(mouseX, mouseY, button);
+    /**
+     * Create opens this screen while Use is already held, then both mouse and keyboard Use release
+     * paths converge on saveAndClose(...). Intercept that existing release lifecycle instead of
+     * waiting for a second RMB click that default controls can never deliver.
+     */
+    @Inject(method = "saveAndClose", at = @At("HEAD"), cancellable = true, remap = false)
+    private void createprecisecontrols$openExactTargetOnUseRelease(double mouseX, double mouseY, CallbackInfo ci) {
+        boolean factoryGauge = isFactoryGauge();
+        boolean exactSupported = factoryGauge && supportsExactTarget();
+        if (ExactTargetRelease.decide(Screen.hasControlDown(), factoryGauge, exactSupported)
+                != ExactTargetRelease.Action.OPEN_EXACT) return;
+
+        openExactTarget(mouseX, mouseY);
+        ci.cancel();
+    }
+
+    private void openExactTarget(double mouseX, double mouseY) {
+        ValueSettings hovered = getClosestCoordinate((int) mouseX, (int) mouseY);
+        int row = hovered.row();
+        int initial = hovered.value();
+        int max = maxSafeValue(row);
+        Component unit = row >= 0 && row < board.rows().size()
+                ? board.rows().get(row) : Component.empty();
+        Minecraft.getInstance().setScreen(new ExactAmountScreen(null,
+                Component.translatable("createprecisecontrols.screen.factory_target", unit),
+                initial, 0, max,
+                value -> ValueSettingsSender.send(pos, row, value, netId)));
     }
 
     /**
@@ -99,7 +110,8 @@ public abstract class ValueSettingsScreenMixin extends Screen {
         if (!isFactoryGauge() || !supportsExactTarget()) return;
         AbstractSimiScreenAccessor layout = (AbstractSimiScreenAccessor) (Object) this;
         int additionalHeight = iconMode ? 46 : 33;
-        Component hint = Component.translatable("createprecisecontrols.hint.right_click_exact");
+        Component hint = Component.translatable("createprecisecontrols.hint.ctrl_release_use_exact",
+                Component.keybind("key.use"));
         int centerX = layout.createprecisecontrols$getGuiLeft() + layout.createprecisecontrols$getWindowWidth() / 2;
         int y = layout.createprecisecontrols$getGuiTop() + layout.createprecisecontrols$getWindowHeight()
                 + additionalHeight - 15;

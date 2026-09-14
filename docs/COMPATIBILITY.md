@@ -19,7 +19,9 @@ Supported precise-entry surfaces:
 
 - Recipe ingredient count: Ctrl+right-click.
 - Recipe output count: Ctrl+right-click.
-- Stock-target value board: right-click.
+- Stock-target value board: hold Use to open it, then hold Ctrl and release Use. With default controls, Use is RMB.
+
+The target gesture follows Create's real lifecycle. Create opens `ValueSettingsScreen` only after Use has been held for several ticks, and the screen normally commits by calling `saveAndClose` when that same Use binding is released. Precise Controls intercepts only the Ctrl-modified `saveAndClose` path; unmodified release remains Create-owned. This also works when Use is rebound to a keyboard key rather than RMB.
 
 The modifier on recipe slots is intentional. Create's current `FactoryPanelScreen.mouseClicked` disconnect path does not inspect the mouse button, so reserving Ctrl+RMB for precise entry leaves all unmodified Create clicks untouched.
 
@@ -57,7 +59,7 @@ Compatibility code only activates when the corresponding addon classes are prese
 
 ## Compatibility verification
 
-CI checks the optional bridges against pinned source revisions for FluidLogistics 1.2.6, FluidLogistics 1.2.9, and Create: Factory Controller. It verifies the reflected fields/methods, relevant GUI geometry, addon-owned RMB actions, and source-of-truth limit constants. This catches optional-addon source drift that normal compile-only CI cannot see.
+CI checks Create 6.0.8 and 6.0.11 for the hold-Use -> open `ValueSettingsScreen` -> Use-release -> `saveAndClose` lifecycle, and checks the optional bridges against pinned FluidLogistics 1.2.6, FluidLogistics 1.2.9, and Create: Factory Controller sources. Shared tests cover the release-routing decision so ordinary release cannot accidentally become precise entry and Ctrl-modified Factory Gauge release cannot regress back to the unreachable second-click path.
 
 ## Client/server requirements
 
@@ -77,7 +79,7 @@ When changing any dependency version:
 
 1. Update the relevant target `gradle.properties`.
 2. Verify the affected screen/method layout against the actual dependency source or decompiled classes.
-3. Update the pinned compatibility-contract source revision when an addon layout intentionally changes.
+3. Update the pinned source-contract revisions when a Create/addon lifecycle or layout intentionally changes.
 4. Run `./gradlew testAll` and `./gradlew buildAll`.
 5. Update this file, `README.md`, and `CURSEFORGE.md` if user-facing support changed.
 6. Record the change in `CHANGELOG.md` and the release-specific `changelog/<version>.md` file.
