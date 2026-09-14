@@ -40,7 +40,7 @@ The modifier on recipe slots is intentional. Create's current `FactoryPanelScree
 
 ## Create: Factory Controller
 
-Factory Controller is optional. The currently documented integration follows the NeoForge 1.21.1 `1.2.1-alpha.3` recipe-screen layout.
+Factory Controller is optional and supported on both pinned 1.2.1 ports: Forge 1.20.1 and NeoForge 1.21.1. The compatibility bridge is shared across loaders; CI verifies its reflected `ConfigureRecipeScreen` fields/methods and `VirtualGaugeBehaviour` constants against the exact published JAR for each target, including Forge's production-obfuscated `m_6375_` click entry point.
 
 Supported surfaces use Ctrl+right-click:
 
@@ -72,9 +72,11 @@ Compatibility code only activates when the corresponding addon classes are prese
 
 ## Compatibility verification
 
-CI checks Create 6.0.8 and 6.0.11 for the hold-Use -> open `ValueSettingsScreen` -> Use-release -> `saveAndClose` lifecycle, and checks the optional bridges against pinned FluidLogistics 1.2.6, FluidLogistics 1.2.9, and Create: Factory Controller sources. Shared tests cover the release-routing decision so ordinary release cannot accidentally become precise entry and Ctrl-modified Factory Gauge release cannot regress back to the unreachable second-click path.
+CI checks Create 6.0.8 and 6.0.11 for the hold-Use -> open `ValueSettingsScreen` -> Use-release -> `saveAndClose` lifecycle, checks the optional bridges against pinned FluidLogistics 1.2.6/1.2.9 and Factory Controller source contracts, and inspects the exact published Factory Controller 1.2.1 Forge/NeoForge binaries for every private field/method/constant used by the reflection bridge. Shared tests cover the release-routing decision so ordinary release cannot accidentally become precise entry and Ctrl-modified Factory Gauge release cannot regress back to the unreachable second-click path.
 
 For the 1.21.1 background regression, launch the normal NeoForge dev client, enter a world, open any precise numeric editor (for example Factory Gauge output with Ctrl+RMB), and verify the world remains sharp behind the editor while the editor's own dim/modal backdrop is still visible. Forge 1.20.1 should retain its existing unblurred behavior.
+
+Before merging an addon-runtime change, manually exercise both normal dev clients with the pinned addons loaded: open FluidLogistics' resource gauge UI and Factory Controller's recipe/configure screen, use the Ctrl+RMB precise-entry paths, and confirm the logs contain no Precise Controls mixin/reflection failures. This complements the automated source/binary contracts with an actual screen-level runtime check.
 
 ## Client/server requirements
 

@@ -56,6 +56,12 @@ jobs:
       - name: Checkout Precise Controls
         uses: actions/checkout@v5
 
+      - name: Setup Java 21 for published binary contracts
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Checkout Create 6.0.8
         uses: actions/checkout@v5
         with:
@@ -104,6 +110,29 @@ jobs:
             --fluid-126 .compat/fluidlogistics-1.2.6 \
             --fluid-129 .compat/fluidlogistics-1.2.9 \
             --factory-controller .compat/create-factory-controller
+
+      - name: Download published Factory Controller runtimes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .compat/published
+          curl --fail --location --retry 3 \
+            --output .compat/published/cfc-forge-1.20.1.jar \
+            'https://cdn.modrinth.com/data/VR3MrvE2/versions/Dn7Fjt3A/createfactorycontroller-1.2.1-forge-1.20.1.jar'
+          curl --fail --location --retry 3 \
+            --output .compat/published/cfc-neoforge-1.21.1.jar \
+            'https://cdn.modrinth.com/data/VR3MrvE2/versions/CBUpgyAH/createfactorycontroller-1.2.1-neoforge-1.21.1.jar'
+          cat > .compat/published/SHA512SUMS <<'EOF'
+          de48b33f68a04e78f0a37baa080a6bbdbcd5668dd19e0cf61b39915c50b7a6467c33de937ef4f2edf3bd548735689217e53612abf12a187b8772db267966abe4  .compat/published/cfc-forge-1.20.1.jar
+          29534000c11747614ef95e2dc4eea2ed7a7fa4dafeaac5cdf0e4bf49a45468f7971763fc4238b46839e08eb8213f6326545a1679742835699edd51a93692a25d  .compat/published/cfc-neoforge-1.21.1.jar
+          EOF
+          sha512sum --check .compat/published/SHA512SUMS
+
+      - name: Verify published Factory Controller binary contracts
+        run: |
+          python3 scripts/verify_cfc_binary_contracts.py \
+            --forge-jar .compat/published/cfc-forge-1.20.1.jar \
+            --neoforge-jar .compat/published/cfc-neoforge-1.21.1.jar
 
       - name: Verify advertised Create versions
         shell: bash
