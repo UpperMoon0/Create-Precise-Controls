@@ -1,0 +1,266 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: create-precise-controls-release
+  cancel-in-progress: false
+
+jobs:
+  version-change:
+    name: Check release version
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.version.outputs.changed }}
+      value: ${{ steps.version.outputs.value }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Detect publishable version
+        id: version
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          read_version() {
+            sed -n 's/^mod_version[[:space:]]*=[[:space:]]*//p' \
+              | head -n1 | tr -d '\r' | xargs
+          }
+
+          current="$(read_version < gradle.properties)"
+          [[ "$current" =~ ^[0-9A-Za-z][0-9A-Za-z._+-]*$ ]] \
+            || { echo "Invalid mod_version: $current" >&2; exit 1; }
+
+          echo "value=$current" >> "$GITHUB_OUTPUT"
+
+          if [[ "$current" == *-SNAPSHOT ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Development version $current is not publishable."
+            exit 0
+          fi
+
+          changed=false
+          tag="v${current}"
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            changed=true
+            echo "Manual release requested for $current."
+          elif [[ -z "${BEFORE_SHA:-}" || "$BEFORE_SHA" =~ ^0+$ ]]; then
+            changed=true
+            echo "No previous revision is available; treating $current as a release candidate."
+          else
+            previous="$(git show "${BEFORE_SHA}:gradle.properties" | read_version)"
+            echo "mod_version: ${previous} -> ${current}"
+            if [[ "$current" != "$previous" ]]; then
+              changed=true
+              echo "Version bump detected."
+            elif ! git show-ref --tags --verify --quiet "refs/tags/$tag"; then
+              changed=true
+              echo "Current version $current has no $tag tag; recovering the unpublished release."
+            else
+              echo "Version is unchanged and $tag already exists; nothing to publish."
+            fi
+          fi
+
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+
+  release:
+    name: Build and publish
+    needs: version-change
+    if: needs.version-change.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Verify release version and changelog
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^mod_version[[:space:]]*=[[:space:]]*//p' gradle.properties | head -n1 | tr -d '\r' | xargs)"
+          [[ "$version" == "${{ needs.version-change.outputs.value }}" ]] \
+            || { echo "Release version changed between gate and build." >&2; exit 1; }
+          [[ "$version" != *-SNAPSHOT ]] \
+            || { echo "Refusing to publish SNAPSHOT version $version." >&2; exit 1; }
+          test -s "changelog/$version.md" \
+            || { echo "Missing release changelog: changelog/$version.md" >&2; exit 1; }
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Test and build Forge 1.20.1
+        run: ./gradlew :common:test :forge-1.20.1:build --no-daemon --no-configuration-cache
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Test and build NeoForge 1.21.1
+        run: ./gradlew :neoforge-1.21.1:build --no-daemon --no-configuration-cache
+
+      - name: Verify release JARs
+        shell: bash
+        env:
+          MOD_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          set -euo pipefail
+          jars=(
+            "forge-1.20.1/build/libs/create-precise-controls-forge-1.20.1-${MOD_VERSION}.jar"
+            "neoforge-1.21.1/build/libs/create-precise-controls-neoforge-1.21.1-${MOD_VERSION}.jar"
+          )
+          for jar_path in "${jars[@]}"; do
+            [[ -f "$jar_path" ]] \
+              || { echo "Expected release JAR was not produced: $jar_path" >&2; exit 1; }
+          done
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: create-precise-controls-${{ steps.version.outputs.value }}
+          path: |
+            forge-1.20.1/build/libs/create-precise-controls-forge-1.20.1-${{ steps.version.outputs.value }}.jar
+            neoforge-1.21.1/build/libs/create-precise-controls-neoforge-1.21.1-${{ steps.version.outputs.value }}.jar
+          if-no-files-found: error
+
+      - name: Publish to CurseForge
+        shell: bash
+        env:
+          CURSEFORGE_API_TOKEN: ${{ secrets.CURSEFORGE_API_TOKEN }}
+          CURSEFORGE_PROJECT_ID: 'TODO_PROJECT_ID'
+          MOD_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$CURSEFORGE_PROJECT_ID" == "TODO_PROJECT_ID" ]]; then
+            echo '::notice::CurseForge project ID is still a placeholder; skipping CurseForge publication.'
+            exit 0
+          fi
+
+          [[ "$CURSEFORGE_PROJECT_ID" =~ ^[0-9]+$ ]] \
+            || { echo "Invalid CurseForge project ID: $CURSEFORGE_PROJECT_ID" >&2; exit 1; }
+          [[ -n "${CURSEFORGE_API_TOKEN:-}" ]] \
+            || { echo 'Missing required GitHub secret: CURSEFORGE_API_TOKEN' >&2; exit 1; }
+
+          changelog_path="changelog/${MOD_VERSION}.md"
+          relations='{"projects":[{"slug":"create","type":"requiredDependency"}]}'
+          targets=(
+            "forge-1.20.1:Forge:1.20.1:Java 17:forge-1.20.1/build/libs/create-precise-controls-forge-1.20.1-${MOD_VERSION}.jar"
+            "neoforge-1.21.1:NeoForge:1.21.1:Java 21:neoforge-1.21.1/build/libs/create-precise-controls-neoforge-1.21.1-${MOD_VERSION}.jar"
+          )
+
+          available_versions="$(curl --fail-with-body --silent --show-error \
+            --retry 4 --retry-max-time 90 --connect-timeout 15 --max-time 45 \
+            --header "X-Api-Token: ${CURSEFORGE_API_TOKEN}" \
+            https://minecraft.curseforge.com/api/game/versions)"
+
+          for entry in "${targets[@]}"; do
+            IFS=':' read -r target_key loader mc_ver java_ver jar_file <<< "$entry"
+            [[ -f "$jar_file" ]] || { echo "Missing release JAR: $jar_file" >&2; exit 1; }
+
+            game_version_names="$(jq -cn \
+              --arg minecraftVersion "$mc_ver" \
+              --arg loaderName "$loader" \
+              --arg javaVersionName "$java_ver" \
+              '[$minecraftVersion, $loaderName, $javaVersionName, "Client"]')"
+
+            while IFS= read -r version_name; do
+              jq -e --arg name "$version_name" 'any(.[]; .name == $name)' \
+                <<< "$available_versions" >/dev/null \
+                || { echo "CurseForge does not recognize game version tag: $version_name" >&2; exit 1; }
+            done < <(jq -r '.[]' <<< "$game_version_names")
+
+            metadata="$(jq -cn \
+              --rawfile changelog "$changelog_path" \
+              --arg displayName "Create: Precise Controls ${MOD_VERSION} - ${loader} ${mc_ver}" \
+              --argjson gameVersionNames "$game_version_names" \
+              --argjson relations "$relations" \
+              '{
+                changelog: $changelog,
+                changelogType: "markdown",
+                displayName: $displayName,
+                gameVersionNames: $gameVersionNames,
+                releaseType: "release",
+                relations: $relations
+              }')"
+
+            response_file="$(mktemp)"
+            http_status="$(curl --silent --show-error \
+              --retry 4 --retry-max-time 90 --connect-timeout 15 --max-time 45 \
+              --output "$response_file" --write-out '%{http_code}' \
+              --request POST \
+              --header "X-Api-Token: ${CURSEFORGE_API_TOKEN}" \
+              --form-string "metadata=${metadata}" \
+              --form "file=@${jar_file}" \
+              "https://minecraft.curseforge.com/api/projects/${CURSEFORGE_PROJECT_ID}/upload-file")"
+            response="$(<"$response_file")"
+            rm -f "$response_file"
+
+            if [[ "$http_status" =~ ^2 ]]; then
+              echo "Published $target_key to CurseForge as file $(jq -er '.id' <<< "$response")."
+            elif grep -Eqi 'already|duplicate' <<< "$response"; then
+              echo "CurseForge already has $jar_file; treating retry as successful."
+            else
+              echo "CurseForge upload failed for $target_key with HTTP $http_status: $response" >&2
+              exit 1
+            fi
+          done
+
+      - name: Create version tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="v${{ steps.version.outputs.value }}"
+          if git show-ref --tags --verify --quiet "refs/tags/$tag"; then
+            tagged_commit="$(git rev-list -n 1 "$tag")"
+            [[ "$tagged_commit" == "$GITHUB_SHA" ]] \
+              || { echo "Tag $tag already points to $tagged_commit. Bump mod_version before releasing another commit." >&2; exit 1; }
+            echo "Tag $tag already points to this commit; reusing it."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$tag" -m "Create: Precise Controls $tag" "$GITHUB_SHA"
+            git push origin "$tag"
+          fi
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.value }}
+          target_commitish: ${{ github.sha }}
+          name: Create: Precise Controls v${{ steps.version.outputs.value }}
+          body_path: changelog/${{ steps.version.outputs.value }}.md
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true
+          files: |
+            forge-1.20.1/build/libs/create-precise-controls-forge-1.20.1-${{ steps.version.outputs.value }}.jar
+            neoforge-1.21.1/build/libs/create-precise-controls-neoforge-1.21.1-${{ steps.version.outputs.value }}.jar

@@ -11,6 +11,8 @@ Client-side quality-of-life controls for Create. Precise Controls adds keyboard 
 
 Create: Factory Controller and Create: FluidLogistics integrations are optional. Factory Controller currently follows its NeoForge 1.21.1 `1.2.1-alpha.3` recipe-screen layout. FluidLogistics compatibility covers both its 1.2.6 Create-screen mixin architecture and the newer 1.2.9 dedicated resource-gauge screen.
 
+See [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) for the maintained compatibility matrix and version-specific notes.
+
 ## Controls
 
 ### Create Factory Gauge
@@ -29,6 +31,7 @@ When FluidLogistics is installed:
 - FluidLogistics 1.2.6 modifies Create's normal `FactoryPanelScreen`; that path is enhanced in place.
 - FluidLogistics 1.2.9+ uses its own `ResourceFactoryGaugeScreen`; the optional compatibility mixin handles that screen as well, including exact target, restock-threshold, additional-stock, and promise-limit controls when present.
 - The 1.2.6 target-amount value board is intentionally left to FluidLogistics. In that release it encodes a unit row/value pair before converting to the underlying resource amount, so treating a typed mB amount as a raw Create `ValueSettingsPacket` value would be incorrect.
+
 ### Create: Factory Controller
 
 When Factory Controller is installed on NeoForge 1.21.1:
@@ -59,6 +62,8 @@ The base integration uses small Mixins against Create's existing GUI classes rat
 
 Factory Controller has its own recipe screen instead of using Create's `FactoryPanelScreen`. Its integration is therefore isolated in an optional `@Pseudo` compatibility mixin. FluidLogistics is handled through its public package-resource display API plus an optional `@Pseudo` mixin for its newer dedicated resource-gauge screen. Neither addon is linked as a required dependency.
 
+For the design boundaries and extension rules, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ## Project layout
 
 ```text
@@ -67,6 +72,8 @@ shared/                 Shared Minecraft/Create client UI and mixins
 forge-1.20.1/           Forge 1.20.1 loader + Create networking bridge
 neoforge-1.21.1/        NeoForge 1.21.1 loader + Create networking bridge
 ```
+
+## Development
 
 Build every target with:
 
@@ -79,3 +86,18 @@ Run shared and loader tests with:
 ```shell
 ./gradlew testAll
 ```
+
+## Documentation and releases
+
+- [Compatibility matrix](docs/COMPATIBILITY.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Release process](docs/RELEASING.md)
+- [CurseForge project-page copy](CURSEFORGE.md)
+- [Full changelog](CHANGELOG.md)
+- Release-specific notes live under [`changelog/`](changelog/).
+
+The repository currently uses `0.1.0-SNAPSHOT` for development. A release is published only after `mod_version` is changed to a non-SNAPSHOT version with a matching `changelog/<version>.md` file.
+
+## License
+
+Create: Precise Controls is available under the [MIT License](LICENSE).

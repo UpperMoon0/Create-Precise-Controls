@@ -1,6 +1,8 @@
 # Changelog
 
-## 0.1.0 - 2026-09-06
+Release-specific changelogs used by publishing automation live in [`changelog/`](changelog/).
+
+## 0.1.0 - Unreleased
 
 ### Added
 
