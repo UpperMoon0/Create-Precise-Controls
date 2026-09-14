@@ -2,6 +2,8 @@
 
 This document is the maintained compatibility reference for Create: Precise Controls. Public project-page copy should stay concise and link here when version-specific behavior matters.
 
+Current release: **0.1.1**.
+
 ## Base targets
 
 | Minecraft | Loader | Java | Create | Status |
