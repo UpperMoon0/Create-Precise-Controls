@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Forge 1.20.1
+            java: '17'
+            task: ':forge-1.20.1:build'
+          - name: NeoForge 1.21.1
+            java: '21'
+            task: ':neoforge-1.21.1:build'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Java ${{ matrix.java }}
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Verify target
+        shell: bash
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :common:test '${{ matrix.task }}' --no-daemon --no-configuration-cache
+
+  compatibility-contracts:
+    name: Source contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout Precise Controls
+        uses: actions/checkout@v5
+
+      - name: Checkout Create 6.0.8
+        uses: actions/checkout@v5
+        with:
+          repository: Creators-of-Create/Create
+          ref: 616296195dcce4ff11b46c3b242c1ac8ce143297
+          path: .compat/create-6.0.8
+          persist-credentials: false
+
+      - name: Checkout Create 6.0.11
+        uses: actions/checkout@v5
+        with:
+          repository: Creators-of-Create/Create
+          ref: 0924e93639ad5f61cfc39a221d909e16f2893df1
+          path: .compat/create-6.0.11
+          persist-credentials: false
+
+      - name: Checkout FluidLogistics 1.2.6
+        uses: actions/checkout@v5
+        with:
+          repository: yision1/CreateFluidLogistics
+          ref: aafdbe356449ef33931bddaf2cf44300b59b7877
+          path: .compat/fluidlogistics-1.2.6
+          persist-credentials: false
+
+      - name: Checkout FluidLogistics 1.2.9
+        uses: actions/checkout@v5
+        with:
+          repository: yision1/CreateFluidLogistics
+          ref: e3dd5bce4f38c012d323b04146782dc2246d9c8b
+          path: .compat/fluidlogistics-1.2.9
+          persist-credentials: false
+
+      - name: Checkout Create Factory Controller contract
+        uses: actions/checkout@v5
+        with:
+          repository: nbcss/create-factory-controller
+          ref: d05ffc5c711436c6f552b8df29911005add7c1e0
+          path: .compat/create-factory-controller
+          persist-credentials: false
+
+      - name: Verify source contracts
+        run: |
+          python3 scripts/verify_compat_contracts.py \
+            --create-608 .compat/create-6.0.8 \
+            --create-6011 .compat/create-6.0.11 \
+            --fluid-126 .compat/fluidlogistics-1.2.6 \
+            --fluid-129 .compat/fluidlogistics-1.2.9 \
+            --factory-controller .compat/create-factory-controller
+
+      - name: Verify advertised Create versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -F 'versionRange="[6.0.8]"' forge-1.20.1/src/main/resources/META-INF/mods.toml
+          grep -F 'versionRange="[6.0.11]"' neoforge-1.21.1/src/main/templates/META-INF/neoforge.mods.toml
+          ! grep -F 'versionRange="[6.0.8,)"' forge-1.20.1/src/main/resources/META-INF/mods.toml
+          ! grep -F 'versionRange="[6.0.11,)"' neoforge-1.21.1/src/main/templates/META-INF/neoforge.mods.toml

@@ -1,0 +1,60 @@
+# Create: Precise Controls
+
+Stop fighting scroll wheels for exact Create values.
+
+**Create: Precise Controls** is a client-side quality-of-life addon that lets you type exact numeric values into Create controls that normally rely on scrolling or repeated clicks. The original controls remain available; precise entry is added alongside them.
+
+## Features
+
+### Create Factory Gauge
+
+- Hold Use to open the target board, then hold Ctrl and release Use to type an exact Items or Stacks target. With default controls, Use is right-click.
+- Ctrl+right-click recipe ingredients and outputs to enter exact counts without replacing Create's ordinary click behavior.
+- Enter stock targets beyond Create's normal 0-100 picker range, with overflow-safe limits.
+- Ordinary Use release still performs Create's normal target confirmation.
+
+### Create: FluidLogistics compatibility
+
+When FluidLogistics is installed, Precise Controls can add exact resource amount entry to supported resource controls.
+
+- Ctrl+right-click to enter raw fluid amounts such as `1440 mB` directly.
+- Uses FluidLogistics' own unit and request-cap information rather than hardcoded fluid limits.
+- Supports the 1.2.6 Create-screen integration and the newer 1.2.9+ dedicated resource-gauge screen architecture.
+- On 1.2.6, supports precise recipe amounts plus the injected restock-threshold, additional-stock, and promise-limit controls.
+- On 1.2.9+, supports exact target, restock-threshold, additional-stock, and promise-limit controls when present.
+
+### Create: Factory Controller compatibility
+
+On the supported NeoForge 1.21.1 integration, Ctrl+right-click precise entry is available for:
+
+- Regular item and fluid recipe ingredients.
+- Non-crafting outputs.
+- Craft batch size.
+- Request multiplier.
+- Request interval.
+- Open-request limit.
+
+Unmodified right-click keeps Factory Controller's native reset/scope actions. Factory Controller's own target/threshold text field is left alone. Fluid request caps are read from the addon's own runtime constants rather than duplicated by Precise Controls.
+
+## Client-side only
+
+Create: Precise Controls adds no blocks, items, world data, commands, server state, or custom network protocol. It submits values through the same packet paths used by the original Create/addon interfaces.
+
+**Multiplayer servers do not need this mod installed.** Install it on the client that wants the improved controls.
+
+## Supported versions
+
+| Minecraft | Loader | Create |
+| --- | --- | --- |
+| 1.20.1 | Forge | 6.0.8 |
+| 1.21.1 | NeoForge | 6.0.11 |
+
+Create is required. Create: Factory Controller and Create: FluidLogistics are optional integrations and are not required to use the base Factory Gauge features.
+
+For exact addon compatibility details, see the repository's `docs/COMPATIBILITY.md`.
+
+## Source and issues
+
+Source code, documentation, changelogs, and issue tracking are maintained at the GitHub repository for Create: Precise Controls.
+
+Licensed under the MIT License.
