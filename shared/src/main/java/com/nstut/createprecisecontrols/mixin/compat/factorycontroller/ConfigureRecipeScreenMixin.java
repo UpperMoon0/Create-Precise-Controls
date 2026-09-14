@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,6 +23,8 @@ import java.util.List;
 @Pseudo
 @Mixin(targets = "io.github.nbcss.createfactorycontroller.content.gui.screen.recipe.ConfigureRecipeScreen", remap = false)
 public abstract class ConfigureRecipeScreenMixin {
+    private static final String VIRTUAL_GAUGE_BEHAVIOUR =
+            "io.github.nbcss.createfactorycontroller.content.component.gauge.VirtualGaugeBehaviour";
     private static final int PANEL_H = 184;
     private static final int GRID_X = 68;
     private static final int GRID_Y = 28;
@@ -42,20 +45,17 @@ public abstract class ConfigureRecipeScreenMixin {
     private static final int PROMISE_LIMIT_Y_FROM_BOTTOM = 24;
     private static final int PROMISE_LIMIT_W = 42;
     private static final int PROMISE_LIMIT_H = 16;
-    private static final int FLUID_INGREDIENT_CAP_MB = 90_000;
-    private static final int FLUID_OUTPUT_CAP_MB = 64_000;
-    private static final int MAX_CRAFT_BATCH = 64;
     private static final int MAX_INTERVAL_SECONDS = 60;
     private static final int MAX_PROMISE_LIMIT = 99;
     private static final int TICKS_PER_SECOND = 20;
-    private static final int RIGHT_BUTTON = 1;
     private static boolean reflectionFailureLogged;
 
     @Inject(method = {"mouseClicked", "m_6375_"}, at = @At("HEAD"), cancellable = true, remap = false, require = 0)
     private void createprecisecontrols$openFactoryControllerAmount(double mouseX, double mouseY, int button,
                                                                     CallbackInfoReturnable<Boolean> cir) {
-        // Right-click is the single precise-entry gesture wherever CFC itself has no RMB action.
-        if (button != RIGHT_BUTTON) return;
+        // CFC owns ordinary RMB on multiplier/interval/limit widgets. Ctrl+RMB is the opt-in
+        // precise-entry gesture so its reset/scope-toggle actions remain intact.
+        if (button != GLFW.GLFW_MOUSE_BUTTON_RIGHT || !Screen.hasControlDown()) return;
 
         try {
             Object self = this;
@@ -94,16 +94,20 @@ public abstract class ConfigureRecipeScreenMixin {
                 cir.setReturnValue(true);
                 return;
             }
+
             if (inside(mouseX, mouseY, panelX + OUTPUT_X, panelY + OUTPUT_Y, CELL_SIZE, CELL_SIZE)) {
                 if ("CRAFTING".equals(mode)) {
                     int current = Math.max(1, getInt(self, "craftBatch"));
+                    int max = Math.max(1, ((Number) invoke(self, "maxCraftBatch")).intValue());
                     open(screen, Component.translatable("createprecisecontrols.screen.craft_batch"),
-                            current, 1, MAX_CRAFT_BATCH,
+                            current, 1, max,
                             value -> setIntUnchecked(self, "craftBatch", value));
                 } else {
                     int current = getInt(self, "outputCount");
                     boolean fluid = getBoolean(self, "fluidMode");
-                    int max = fluid ? FLUID_OUTPUT_CAP_MB : ((Number) invoke(self, "maxItemOutput")).intValue();
+                    int max = fluid
+                            ? getVirtualGaugeConstant(self, "FLUID_OUTPUT_CAP_MB")
+                            : ((Number) invoke(self, "maxItemOutput")).intValue();
                     open(screen,
                             Component.translatable(fluid
                                     ? "createprecisecontrols.screen.fluid_output_amount"
@@ -130,7 +134,7 @@ public abstract class ConfigureRecipeScreenMixin {
             boolean fluid = (boolean) invoke(self, "isFluidConn", connectionIndex);
             int max;
             if (fluid) {
-                max = FLUID_INGREDIENT_CAP_MB;
+                max = getVirtualGaugeConstant(self, "FLUID_INGREDIENT_CAP_MB");
             } else {
                 @SuppressWarnings("unchecked")
                 List<Object> connections = (List<Object>) getField(self, "inputConnections");
@@ -184,6 +188,12 @@ public abstract class ConfigureRecipeScreenMixin {
 
     private static boolean getBoolean(Object target, String name) throws ReflectiveOperationException {
         return (boolean) getField(target, name);
+    }
+
+    private static int getVirtualGaugeConstant(Object target, String name) throws ReflectiveOperationException {
+        Class<?> type = Class.forName(VIRTUAL_GAUGE_BEHAVIOUR, false, target.getClass().getClassLoader());
+        Field field = type.getField(name);
+        return field.getInt(null);
     }
 
     private static void setIntUnchecked(Object target, String name, int value) {

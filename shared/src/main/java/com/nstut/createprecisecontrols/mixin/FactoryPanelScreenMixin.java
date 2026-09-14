@@ -4,16 +4,20 @@ import com.nstut.createprecisecontrols.client.ExactAmountScreen;
 import com.nstut.createprecisecontrols.compat.fluidlogistics.FluidLogisticsCompat;
 import com.nstut.createprecisecontrols.compat.fluidlogistics.FluidLogisticsCompat.ResourceAmountSpec;
 import com.simibubi.create.content.logistics.BigItemStack;
+import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBehaviour;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelScreen;
+import com.simibubi.create.foundation.gui.widget.ScrollInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,15 +36,27 @@ public abstract class FactoryPanelScreenMixin {
     @Shadow private BigItemStack outputConfig;
     @Shadow private boolean craftingActive;
     @Shadow private boolean restocker;
+    @Shadow private FactoryPanelBehaviour behaviour;
 
     @Inject(method = {"mouseClicked", "m_6375_"}, at = @At("HEAD"), cancellable = true, remap = false)
     private void createprecisecontrols$openExactAmount(double mouseX, double mouseY, int button,
                                                         CallbackInfoReturnable<Boolean> cir) {
-        // Create uses LMB to remove an ingredient connection. FluidLogistics 1.2.6 leaves
-        // RMB free here, so right-click opens exact entry without replacing native actions.
-        if (button != 1 || craftingActive || restocker) return;
+        // Create's ingredient click handler does not inspect the mouse button at all. Reserve a
+        // modifier gesture so ordinary LMB/RMB continue to execute Create/addon behavior unchanged.
+        if (button != GLFW.GLFW_MOUSE_BUTTON_RIGHT || !Screen.hasControlDown()) return;
 
         Screen screen = (Screen) (Object) this;
+
+        // FluidLogistics 1.2.6 injects these ScrollInputs directly into FactoryPanelScreen.
+        // Commit through Create's existing sendIt path so FluidLogistics' sendIt hook emits its
+        // own setting packet instead of us manufacturing addon network state.
+        if (openLegacyFluidLogisticsControl(screen, mouseX, mouseY)) {
+            cir.setReturnValue(true);
+            return;
+        }
+
+        if (craftingActive || restocker) return;
+
         AbstractSimiScreenAccessor layout = (AbstractSimiScreenAccessor) (Object) this;
         int x = layout.createprecisecontrols$getGuiLeft();
         int y = layout.createprecisecontrols$getGuiTop();
@@ -63,6 +79,67 @@ public abstract class FactoryPanelScreenMixin {
             openRecipeAmount(screen, outputConfig, false);
             cir.setReturnValue(true);
         }
+    }
+
+    private boolean openLegacyFluidLogisticsControl(Screen screen, double mouseX, double mouseY) {
+        String[] fields = {
+                "fluidlogistics$restockThresholdInput",
+                "fluidlogistics$additionalStockInput",
+                "fluidlogistics$promiseLimitInput"
+        };
+        for (String fieldName : fields) {
+            ScrollInput input = findOptionalScrollInput(this, fieldName);
+            if (input == null || !input.isMouseOver(mouseX, mouseY)) continue;
+
+            ScrollInputAccessor range = (ScrollInputAccessor) (Object) input;
+            int min = range.createprecisecontrols$getMin();
+            int maxInclusive = range.createprecisecontrols$getMax() - 1;
+            Component title = legacyFluidTitle(fieldName);
+            Minecraft.getInstance().setScreen(new ExactAmountScreen(
+                    screen, title, input.getState(), min, maxInclusive, value -> {
+                        input.setState(value);
+                        ((FactoryPanelScreenAccessor) (Object) this)
+                                .createprecisecontrols$sendIt(null, false);
+                    }));
+            return true;
+        }
+        return false;
+    }
+
+    private Component legacyFluidTitle(String fieldName) {
+        String unit = FluidLogisticsCompat.recipeAmountSpec(behaviour.getFilter())
+                .map(ResourceAmountSpec::baseUnit)
+                .orElse("units");
+        return switch (fieldName) {
+            case "fluidlogistics$restockThresholdInput" ->
+                    Component.translatable("createprecisecontrols.screen.restock_threshold", unit);
+            case "fluidlogistics$additionalStockInput" ->
+                    Component.translatable("createprecisecontrols.screen.additional_stock", unit);
+            case "fluidlogistics$promiseLimitInput" ->
+                    Component.translatable("createprecisecontrols.screen.promise_limit");
+            default -> Component.translatable("createprecisecontrols.screen.exact_value");
+        };
+    }
+
+    private static ScrollInput findOptionalScrollInput(Object target, String name) {
+        try {
+            Field field = findField(target.getClass(), name);
+            field.setAccessible(true);
+            Object value = field.get(target);
+            return value instanceof ScrollInput input ? input : null;
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
+    private static Field findField(Class<?> type, String name) throws NoSuchFieldException {
+        for (Class<?> current = type; current != null; current = current.getSuperclass()) {
+            try {
+                return current.getDeclaredField(name);
+            } catch (NoSuchFieldException ignored) {
+            }
+        }
+        throw new NoSuchFieldException(name);
     }
 
     /**

@@ -47,3 +47,42 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew :common:test '${{ matrix.task }}' --no-daemon --no-configuration-cache
+
+  compatibility-contracts:
+    name: Optional addon contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Precise Controls
+        uses: actions/checkout@v5
+
+      - name: Checkout FluidLogistics 1.2.6
+        uses: actions/checkout@v5
+        with:
+          repository: yision1/CreateFluidLogistics
+          ref: aafdbe356449ef33931bddaf2cf44300b59b7877
+          path: .compat/fluidlogistics-1.2.6
+          persist-credentials: false
+
+      - name: Checkout FluidLogistics 1.2.9
+        uses: actions/checkout@v5
+        with:
+          repository: yision1/CreateFluidLogistics
+          ref: e3dd5bce4f38c012d323b04146782dc2246d9c8b
+          path: .compat/fluidlogistics-1.2.9
+          persist-credentials: false
+
+      - name: Checkout Create Factory Controller contract
+        uses: actions/checkout@v5
+        with:
+          repository: nbcss/create-factory-controller
+          ref: d05ffc5c711436c6f552b8df29911005add7c1e0
+          path: .compat/create-factory-controller
+          persist-credentials: false
+
+      - name: Verify optional addon source contracts
+        run: |
+          python3 scripts/verify_compat_contracts.py \
+            --fluid-126 .compat/fluidlogistics-1.2.6 \
+            --fluid-129 .compat/fluidlogistics-1.2.9 \
+            --factory-controller .compat/create-factory-controller

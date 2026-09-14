@@ -18,32 +18,32 @@ See [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) for the maintained compatibil
 ### Create Factory Gauge
 
 - **Right-click the target-amount value board** to type an exact Items or Stacks target. Large values are supported beyond Create's 0-100 picker range, with a safe cap that prevents the resulting demand from overflowing Create's integer count model.
-- **Right-click a recipe ingredient** to type its exact count.
-- **Right-click the recipe output** to type its exact count.
-- Normal scrolling, Shift-scrolling, and Create's existing clicks are unchanged.
+- **Ctrl+right-click a recipe ingredient** to type its exact count.
+- **Ctrl+right-click the recipe output** to type its exact count.
+- Ordinary left/right clicks, normal scrolling, and Shift-scrolling keep their Create behavior. The modifier is deliberate because Create's ingredient click handler consumes every mouse button even though its tooltip only documents left-click disconnect.
 
 ### Create: FluidLogistics
 
 When FluidLogistics is installed:
 
-- **Right-click a resource recipe ingredient/output** to type the raw amount directly. Fluid recipes therefore accept values such as `1440 mB` without mouse-wheel stepping.
+- **Ctrl+right-click a resource recipe ingredient/output** to type the raw amount directly. Fluid recipes therefore accept values such as `1440 mB` without mouse-wheel stepping.
 - Precise Controls asks FluidLogistics' `PackageResources` / `PackageResourceDisplay` API for the resource unit and `maxRequestPerBatch`. Fluid caps are not hardcoded in this mod.
-- FluidLogistics 1.2.6 modifies Create's normal `FactoryPanelScreen`; that path is enhanced in place.
+- FluidLogistics 1.2.6 modifies Create's normal `FactoryPanelScreen`; that path supports exact recipe amounts plus its injected restock-threshold, additional-stock, and promise-limit controls. Those settings are committed through the screen's existing `sendIt` path so FluidLogistics emits its own packet.
 - FluidLogistics 1.2.9+ uses its own `ResourceFactoryGaugeScreen`; the optional compatibility mixin handles that screen as well, including exact target, restock-threshold, additional-stock, and promise-limit controls when present.
 - The 1.2.6 target-amount value board is intentionally left to FluidLogistics. In that release it encodes a unit row/value pair before converting to the underlying resource amount, so treating a typed mB amount as a raw Create `ValueSettingsPacket` value would be incorrect.
 
 ### Create: Factory Controller
 
-When Factory Controller is installed on NeoForge 1.21.1:
+When Factory Controller is installed on NeoForge 1.21.1, use **Ctrl+right-click** for precise entry on supported regions:
 
-- **Right-click a REGULAR ingredient** for an exact item or fluid amount.
-- **Right-click a non-crafting output** for an exact item or fluid amount.
-- **Right-click the crafting output** to type the craft batch directly.
-- **Right-click the request multiplier** to type an exact multiplier within the controller's current structural cap.
-- **Right-click the request interval arrow** to type an exact interval from 1 to 60 seconds.
-- **Right-click the open-request limit** to type a value from 0 to 99.
+- A REGULAR ingredient for an exact item or fluid amount.
+- A non-crafting output for an exact item or fluid amount.
+- The crafting output to type the craft batch directly.
+- The request multiplier within the controller's current structural cap.
+- The request interval arrow from 1 to 60 seconds.
+- The open-request limit from 0 to 99.
 
-Fluid values use the units and limits defined by Factory Controller itself: up to 90,000 mB per regular fluid ingredient and 64,000 mB for fluid output. Factory Controller's target/threshold field already supports native click-to-type input, so Precise Controls deliberately does not replace it.
+Unmodified RMB keeps Factory Controller's own reset and scope-toggle actions. Fluid limits are read from Factory Controller's `VirtualGaugeBehaviour` at runtime instead of duplicated here; on the pinned compatibility source they are 90,000 mB per regular fluid ingredient and 10,000 mB for fluid output. Factory Controller's target/threshold field already supports native click-to-type input, so Precise Controls deliberately does not replace it.
 
 ## Client-only
 
@@ -55,12 +55,15 @@ The Forge metadata ignores server-version matching, loader dependencies are clie
 
 The base integration uses small Mixins against Create's existing GUI classes rather than replacing screens wholesale:
 
-- `FactoryPanelScreenMixin` adds exact entry to Factory Gauge recipe counts.
+- `FactoryPanelScreenMixin` adds exact entry to Factory Gauge recipe counts and legacy FluidLogistics-injected controls.
 - `ValueSettingsScreenMixin` adds exact target entry only when the value-settings screen belongs to a Factory Gauge.
 - `AbstractSimiScreenAccessor` reads layout fields from the Catnip superclass where those fields are actually declared.
+- `ScrollInputAccessor` reads the range already configured by Create/addon widgets rather than duplicating it.
 - Loader-specific `ValueSettingsSender` classes bridge Create 1.20.1 and 1.21.1 networking while keeping the UI code shared.
 
 Factory Controller has its own recipe screen instead of using Create's `FactoryPanelScreen`. Its integration is therefore isolated in an optional `@Pseudo` compatibility mixin. FluidLogistics is handled through its public package-resource display API plus an optional `@Pseudo` mixin for its newer dedicated resource-gauge screen. Neither addon is linked as a required dependency.
+
+CI pins the supported FluidLogistics and Factory Controller source revisions and verifies the private/source contracts used by optional reflection and mixin compatibility. A dependency layout change therefore fails CI instead of silently compiling a broken optional bridge.
 
 For the design boundaries and extension rules, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 

@@ -4,12 +4,14 @@ import com.nstut.createprecisecontrols.client.ExactAmountScreen;
 import com.nstut.createprecisecontrols.compat.fluidlogistics.FluidLogisticsCompat;
 import com.nstut.createprecisecontrols.compat.fluidlogistics.FluidLogisticsCompat.ResourceAmountSpec;
 import com.nstut.createprecisecontrols.mixin.AbstractSimiScreenAccessor;
+import com.nstut.createprecisecontrols.mixin.ScrollInputAccessor;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelBehaviour;
 import com.simibubi.create.foundation.gui.widget.ScrollInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -40,20 +42,18 @@ public abstract class ResourceFactoryGaugeScreenMixin {
     private static final int CELL_SIZE = 16;
     private static final int OUTPUT_X = 160;
     private static final int OUTPUT_Y = 48;
-    private static final int RIGHT_BUTTON = 1;
     private static boolean reflectionFailureLogged;
 
     @Inject(method = {"mouseClicked", "m_6375_"}, at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private void createprecisecontrols$openFluidLogisticsAmount(double mouseX, double mouseY, int button,
                                                                  CallbackInfoReturnable<Boolean> cir) {
-        if (button != RIGHT_BUTTON) return;
+        // Preserve FluidLogistics' normal click/scroll behavior. Precise entry is an explicit modifier gesture.
+        if (button != GLFW.GLFW_MOUSE_BUTTON_RIGHT || !Screen.hasControlDown()) return;
 
         try {
             Object self = this;
             Screen screen = (Screen) self;
 
-            // The current FluidLogistics resource screen exposes several raw integer ScrollInputs.
-            // RMB can type those exactly; use each widget's own min/max instead of duplicating policy.
             if (openResourceScrollInput(self, screen, mouseX, mouseY)) {
                 cir.setReturnValue(true);
                 return;
@@ -98,8 +98,9 @@ public abstract class ResourceFactoryGaugeScreenMixin {
             Object value = getField(self, fieldName);
             if (!(value instanceof ScrollInput input) || !input.isMouseOver(mouseX, mouseY)) continue;
 
-            int min = getIntField(input, "min");
-            int maxInclusive = getIntField(input, "max") - 1;
+            ScrollInputAccessor range = (ScrollInputAccessor) (Object) input;
+            int min = range.createprecisecontrols$getMin();
+            int maxInclusive = range.createprecisecontrols$getMax() - 1;
             int current = input.getState();
             Component title = switch (fieldName) {
                 case "targetAmountInput" -> resourceTitle(self, "createprecisecontrols.screen.resource_target");
@@ -165,12 +166,6 @@ public abstract class ResourceFactoryGaugeScreenMixin {
         return (boolean) getField(target, name);
     }
 
-    private static int getIntField(Object target, String name) throws ReflectiveOperationException {
-        Field field = findField(target.getClass(), name);
-        field.setAccessible(true);
-        return field.getInt(target);
-    }
-
     private static Field findField(Class<?> type, String name) throws NoSuchFieldException {
         for (Class<?> current = type; current != null; current = current.getSuperclass()) {
             try {
@@ -186,6 +181,7 @@ public abstract class ResourceFactoryGaugeScreenMixin {
         method.setAccessible(true);
         return method.invoke(target, args);
     }
+
     private static void invokeUnchecked(Object target, String name, Object... args) {
         try {
             invoke(target, name, args);

@@ -5,7 +5,9 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "AbstractSimiScreenAccessor",
+    "FactoryPanelScreenAccessor",
     "FactoryPanelScreenMixin",
+    "ScrollInputAccessor",
     "ValueSettingsScreenMixin",
     "compat.factorycontroller.ConfigureRecipeScreenMixin",
     "compat.fluidlogistics.ResourceFactoryGaugeScreenMixin"

@@ -17,17 +17,17 @@ The base Factory Gauge integration is the primary feature and is supported on bo
 
 Supported precise-entry surfaces:
 
-- Recipe ingredient count.
-- Recipe output count.
-- Stock-target value board.
+- Recipe ingredient count: Ctrl+right-click.
+- Recipe output count: Ctrl+right-click.
+- Stock-target value board: right-click.
 
-The normal Create interactions remain available.
+The modifier on recipe slots is intentional. Create's current `FactoryPanelScreen.mouseClicked` disconnect path does not inspect the mouse button, so reserving Ctrl+RMB for precise entry leaves all unmodified Create clicks untouched.
 
 ## Create: Factory Controller
 
 Factory Controller is optional. The currently documented integration follows the NeoForge 1.21.1 `1.2.1-alpha.3` recipe-screen layout.
 
-Supported surfaces on that integration:
+Supported surfaces use Ctrl+right-click:
 
 - REGULAR item/fluid ingredient amount.
 - Non-crafting item/fluid output amount.
@@ -36,7 +36,9 @@ Supported surfaces on that integration:
 - Request interval from 1 to 60 seconds.
 - Open-request limit from 0 to 99.
 
-Factory Controller's target/threshold field already provides native click-to-type behavior and is intentionally not replaced.
+Unmodified RMB remains owned by Factory Controller. In particular, multiplier reset, request-interval reset, and open-request scope toggling are not intercepted.
+
+Factory Controller's target/threshold field already provides native click-to-type behavior and is intentionally not replaced. The compatibility bridge reads `FLUID_INGREDIENT_CAP_MB`, `FLUID_OUTPUT_CAP_MB`, and the dynamic craft/item caps from Factory Controller rather than copying those limits. At the pinned compatibility revision, the fluid caps are 90,000 mB for a regular ingredient and 10,000 mB for output.
 
 The compatibility mixin is optional (`@Pseudo`) so Factory Controller is not a required dependency.
 
@@ -44,14 +46,18 @@ The compatibility mixin is optional (`@Pseudo`) so Factory Controller is not a r
 
 FluidLogistics is optional. Precise Controls recognizes two relevant UI architectures:
 
-- **1.2.6:** FluidLogistics modifies Create's normal `FactoryPanelScreen`. Precise Controls enhances the compatible recipe controls in that screen.
-- **1.2.9+:** FluidLogistics provides a dedicated `ResourceFactoryGaugeScreen`. An optional compatibility mixin handles that screen and supported exact target/restock/additional-stock/promise-limit controls.
+- **1.2.6:** FluidLogistics modifies Create's normal `FactoryPanelScreen`. Precise Controls supports Ctrl+RMB exact recipe amounts and the injected restock-threshold, additional-stock, and promise-limit ScrollInputs. The latter commit through Create's existing `sendIt` method so FluidLogistics' own send hook emits the authoritative setting packet.
+- **1.2.9+:** FluidLogistics provides a dedicated `ResourceFactoryGaugeScreen`. An optional compatibility mixin handles Ctrl+RMB exact recipe amounts and supported exact target/restock/additional-stock/promise-limit controls.
 
-Resource units and `maxRequestPerBatch` are obtained from FluidLogistics' package-resource API rather than duplicated as hardcoded limits.
+Resource units and `maxRequestPerBatch` are obtained from FluidLogistics' package-resource API rather than duplicated as hardcoded limits. ScrollInput ranges are read from the widgets themselves.
 
 The 1.2.6 target-amount value board is deliberately not treated as a raw Create value because that release encodes a unit row/value pair before converting it to the underlying resource amount.
 
 Compatibility code only activates when the corresponding addon classes are present. Actual installable combinations are also constrained by which Minecraft/loader versions each addon publishes.
+
+## Compatibility verification
+
+CI checks the optional bridges against pinned source revisions for FluidLogistics 1.2.6, FluidLogistics 1.2.9, and Create: Factory Controller. It verifies the reflected fields/methods, relevant GUI geometry, addon-owned RMB actions, and source-of-truth limit constants. This catches optional-addon source drift that normal compile-only CI cannot see.
 
 ## Client/server requirements
 
@@ -71,6 +77,7 @@ When changing any dependency version:
 
 1. Update the relevant target `gradle.properties`.
 2. Verify the affected screen/method layout against the actual dependency source or decompiled classes.
-3. Run `./gradlew testAll` and `./gradlew buildAll`.
-4. Update this file, `README.md`, and `CURSEFORGE.md` if user-facing support changed.
-5. Record the change in `CHANGELOG.md` and the release-specific `changelog/<version>.md` file.
+3. Update the pinned compatibility-contract source revision when an addon layout intentionally changes.
+4. Run `./gradlew testAll` and `./gradlew buildAll`.
+5. Update this file, `README.md`, and `CURSEFORGE.md` if user-facing support changed.
+6. Record the change in `CHANGELOG.md` and the release-specific `changelog/<version>.md` file.
