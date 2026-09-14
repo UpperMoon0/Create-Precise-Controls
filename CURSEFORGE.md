@@ -57,7 +57,7 @@ Create: Precise Controls adds no blocks, items, world data, commands, server sta
 
 Create is required. Create: Factory Controller and Create: FluidLogistics are optional integrations and are not required to use the base Factory Gauge features.
 
-For exact addon compatibility details, see the repository's `docs/COMPATIBILITY.md`.
+For exact addon compatibility details, see the repository's `docs/COMPATIBILITY.md`. Full 0.1.1 release notes are in `changelog/0.1.1.md`.
 
 ## Source and issues
 
