@@ -19,6 +19,8 @@ Release-specific changelogs used by publishing automation live in [`changelog/`]
 - Documented the addon dev-runtime matrix and the two-target screen-level verification checklist.
 - CI now SHA-512 verifies the exact published Factory Controller jars before inspecting their private reflection contract.
 
+See [`changelog/0.1.1.md`](changelog/0.1.1.md) for the release-specific notes.
+
 ## 0.1.0
 
 ### Added
