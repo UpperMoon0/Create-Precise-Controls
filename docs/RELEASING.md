@@ -10,7 +10,7 @@ A publishable release requires:
 - A matching `changelog/<version>.md` file.
 - Passing Forge 1.20.1 and NeoForge 1.21.1 builds/tests.
 - `CURSEFORGE_API_TOKEN` configured as a GitHub Actions secret before CurseForge publishing is enabled.
-- The real CurseForge project ID replacing `TODO_PROJECT_ID` in `.github/workflows/release.yml`.
+- CurseForge project `1696007` configured in `.github/workflows/release.yml`.
 
 The root `CHANGELOG.md` is the human-readable history. Files under `changelog/` are the authoritative release bodies consumed by publishing automation.
 
@@ -28,24 +28,17 @@ On a push to `main`, `.github/workflows/release.yml`:
 4. Requires `changelog/<version>.md`.
 5. Builds/tests Forge 1.20.1 under Java 17.
 6. Builds/tests NeoForge 1.21.1 under Java 21.
-7. Verifies the expected release JARs exist and uploads them as a workflow artifact.
-8. Publishes both JARs to CurseForge when a real project ID is configured.
-9. Creates/reuses the `v<version>` tag.
-10. Creates the GitHub Release using the version-specific changelog and both JARs.
+7. Uploads each exact release JAR as its own workflow artifact.
+8. Publishes Forge 1.20.1 and NeoForge 1.21.1 independently to CurseForge project `1696007` from those artifacts.
+9. Creates the GitHub Release from the same verified artifacts and `changelog/<version>.md`.
 
-The workflow can also be run manually. Manual runs still refuse SNAPSHOT versions.
+The workflow can also be run manually from `main` with the `release` input explicitly enabled. Manual runs still refuse SNAPSHOT versions.
 
-## CurseForge placeholder
+## CurseForge publishing
 
-The workflow currently contains:
+CurseForge publishing targets project `1696007`. Each supported loader/version is a separate publish job that downloads the exact JAR produced by the release build, validates CurseForge game-version tags, declares Create as a required dependency, and treats duplicate-upload responses as successful retries.
 
-```text
-CURSEFORGE_PROJECT_ID: 'TODO_PROJECT_ID'
-```
-
-While that placeholder remains, the CurseForge step prints a notice and skips publication instead of failing or uploading to an unintended project. GitHub artifact/release behavior remains available.
-
-When the project ID is known, replace only the placeholder value and ensure `CURSEFORGE_API_TOKEN` is configured.
+`CURSEFORGE_API_TOKEN` must be configured as a GitHub Actions secret. A missing token fails publishing instead of silently skipping it.
 
 ## Preparing a release
 
