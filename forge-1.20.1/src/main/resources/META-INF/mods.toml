@@ -9,6 +9,7 @@ version="${version}"
 displayName="${mod_name}"
 displayURL="${mod_url}"
 authors="${mod_authors}"
+logoFile="icon.png"
 displayTest="IGNORE_SERVER_VERSION"
 description='''${mod_description}'''
 
