@@ -9,7 +9,7 @@ Client-side quality-of-life controls for Create. Precise Controls adds keyboard 
 | 1.20.1 | Forge | 6.0.8 |
 | 1.21.1 | NeoForge | 6.0.11 |
 
-Create: Factory Controller and Create: FluidLogistics integrations are optional. Factory Controller currently follows its NeoForge 1.21.1 `1.2.1-alpha.3` recipe-screen layout. FluidLogistics compatibility covers both its 1.2.6 Create-screen mixin architecture and the newer 1.2.9 dedicated resource-gauge screen.
+Create: Factory Controller and Create: FluidLogistics integrations are optional. Factory Controller 1.2.1 is supported on both Forge 1.20.1 and NeoForge 1.21.1. FluidLogistics compatibility covers both its 1.2.6 Create-screen mixin architecture and the newer 1.2.9 dedicated resource-gauge screen.
 
 See [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) for the maintained compatibility matrix and version-specific notes.
 
@@ -34,7 +34,7 @@ When FluidLogistics is installed:
 
 ### Create: Factory Controller
 
-When Factory Controller is installed on NeoForge 1.21.1, use **Ctrl+right-click** for precise entry on supported regions:
+When Factory Controller 1.2.1 is installed on Forge 1.20.1 or NeoForge 1.21.1, use **Ctrl+right-click** for precise entry on supported regions:
 
 - A REGULAR ingredient for an exact item or fluid amount.
 - A non-crafting output for an exact item or fluid amount.
@@ -63,7 +63,7 @@ The base integration uses small Mixins against Create's existing GUI classes rat
 
 Factory Controller has its own recipe screen instead of using Create's `FactoryPanelScreen`. Its integration is therefore isolated in an optional `@Pseudo` compatibility mixin. FluidLogistics is handled through its public package-resource display API plus an optional `@Pseudo` mixin for its newer dedicated resource-gauge screen. Neither addon is linked as a required dependency.
 
-CI pins Create 6.0.8/6.0.11 plus the supported FluidLogistics and Factory Controller source revisions. It verifies Create's hold-Use/open/release/save lifecycle as well as the private/source contracts used by optional reflection and mixin compatibility. Shared regression tests verify that Ctrl-modified Factory Gauge release diverts to the exact editor while ordinary release remains Create-owned.
+CI pins Create 6.0.8/6.0.11 plus the supported FluidLogistics and Factory Controller source revisions. It verifies Create's hold-Use/open/release/save lifecycle as well as the private/source contracts used by optional reflection and mixin compatibility. CI also downloads and SHA-512 verifies the exact published Factory Controller 1.2.1 jars for Forge and NeoForge, then checks the private fields/methods/constants and loader-specific click entry points used by the reflection bridge. Shared regression tests verify that Ctrl-modified Factory Gauge release diverts to the exact editor while ordinary release remains Create-owned.
 
 For the design boundaries and extension rules, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
@@ -101,7 +101,7 @@ The standard Forge 1.20.1 and NeoForge 1.21.1 `runClient` configurations also lo
 - [Full changelog](CHANGELOG.md)
 - Release-specific notes live under [`changelog/`](changelog/).
 
-The repository currently uses `0.1.0-SNAPSHOT` for development. A release is published only after `mod_version` is changed to a non-SNAPSHOT version with a matching `changelog/<version>.md` file.
+Current release version: **0.1.1**. Publishing requires a non-SNAPSHOT `mod_version` and a matching `changelog/<version>.md` file.
 
 ## License
 
