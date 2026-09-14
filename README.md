@@ -103,6 +103,8 @@ The standard Forge 1.20.1 and NeoForge 1.21.1 `runClient` configurations also lo
 
 Current release version: **0.1.1**. Publishing requires a non-SNAPSHOT `mod_version` and a matching `changelog/<version>.md` file.
 
+See [changelog/0.1.1.md](changelog/0.1.1.md) for the 0.1.1 release notes.
+
 ## License
 
 Create: Precise Controls is available under the [MIT License](LICENSE).
