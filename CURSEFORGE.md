@@ -25,7 +25,7 @@ When FluidLogistics is installed, Precise Controls can add exact resource amount
 
 ### Create: Factory Controller compatibility
 
-On the supported NeoForge 1.21.1 integration, Ctrl+right-click precise entry is available for:
+With Create: Factory Controller 1.2.1 on Forge 1.20.1 or NeoForge 1.21.1, Ctrl+right-click precise entry is available for:
 
 - Regular item and fluid recipe ingredients.
 - Non-crafting outputs.
@@ -35,6 +35,12 @@ On the supported NeoForge 1.21.1 integration, Ctrl+right-click precise entry is 
 - Open-request limit.
 
 Unmodified right-click keeps Factory Controller's native reset/scope actions. Factory Controller's own target/threshold text field is left alone. Fluid request caps are read from the addon's own runtime constants rather than duplicated by Precise Controls.
+
+## 0.1.1 highlights
+
+- NeoForge 1.21.1 precise-entry screens no longer blur the world behind the modal; the normal Precise Controls dim backdrop remains.
+- Dev runtimes for both supported loader targets now include the matching FluidLogistics 1.2.9 and Factory Controller 1.2.1 builds for realistic compatibility testing.
+- CI validates the exact published Factory Controller 1.2.1 binaries for both Forge and NeoForge, including the private reflection contract used by Precise Controls.
 
 ## Client-side only
 
