@@ -90,6 +90,8 @@ Run shared and loader tests with:
 ./gradlew testAll
 ```
 
+The standard Forge 1.20.1 and NeoForge 1.21.1 `runClient` configurations also load the matching FluidLogistics 1.2.9 and Create: Factory Controller 1.2.1 builds as dev/runtime-only dependencies. This keeps optional compatibility code active during normal client testing without making either addon a user dependency. Exact addon pins live in each target's `gradle.properties`.
+
 ## Documentation and releases
 
 - [Compatibility matrix](docs/COMPATIBILITY.md)

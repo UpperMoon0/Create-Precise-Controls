@@ -18,6 +18,11 @@ repositories {
     maven { url = 'https://maven.createmod.net' }
     maven { url = 'https://maven.ithundxr.dev/snapshots' }
     maven { url = 'https://maven.blamejared.com' }
+    maven {
+        name = 'Modrinth'
+        url = 'https://api.modrinth.com/maven'
+        content { includeGroup 'maven.modrinth' }
+    }
 }
 
 neoForge {
@@ -42,6 +47,9 @@ configurations {
 dependencies {
     compileOnly "com.simibubi.create:create-1.21.1:${create_version}"
     localRuntime "com.simibubi.create:create-1.21.1:${create_version}"
+    // Optional integrations are present only in the dev runtime; they remain optional for users.
+    localRuntime "maven.modrinth:createfluidlogistic:${fluidlogistics_modrinth_version_id}"
+    localRuntime "maven.modrinth:create-factory-controller:${factory_controller_version}"
 }
 
 def generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
