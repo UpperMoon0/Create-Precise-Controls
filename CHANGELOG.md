@@ -2,7 +2,26 @@
 
 Release-specific changelogs used by publishing automation live in [`changelog/`](changelog/).
 
-## 0.1.0 - Unreleased
+## 0.1.1
+
+### Fixed
+
+- Fixed the NeoForge 1.21.1 precise-input modal applying Minecraft's blurred in-world background. The world now stays sharp while Precise Controls keeps its own dim/modal backdrop.
+
+### Added
+
+- Added Create: FluidLogistics 1.2.9 and Create: Factory Controller 1.2.1 to the normal Forge 1.20.1 and NeoForge 1.21.1 dev runtimes as optional runtime-only dependencies.
+- Added exact published-binary contract checks for Create: Factory Controller 1.2.1 on both supported loaders, including Forge's production-obfuscated click entry point.
+
+### Documentation and verification
+
+- Documented Create: Factory Controller 1.2.1 support on both Forge 1.20.1 and NeoForge 1.21.1.
+- Documented the addon dev-runtime matrix and the two-target screen-level verification checklist.
+- CI now SHA-512 verifies the exact published Factory Controller jars before inspecting their private reflection contract.
+
+See [`changelog/0.1.1.md`](changelog/0.1.1.md) for the release-specific notes.
+
+## 0.1.0
 
 ### Added
 

@@ -85,6 +85,18 @@ public final class ExactAmountScreen extends Screen {
         return false;
     }
 
+    /**
+     * Minecraft 1.21.x calls this overload from {@link Screen#render} before rendering widgets, and the
+     * vanilla implementation applies the in-world blur effect. The precise editor already draws its own
+     * lightweight dim/modal backdrop, so the vanilla background is intentionally suppressed.
+     *
+     * <p>There is no {@code @Override} annotation because Minecraft 1.20.1 does not expose this overload;
+     * keeping the method in shared source is harmless there while allowing 1.21.1 virtual dispatch to use it.</p>
+     */
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        // Intentionally empty: keep the live world sharp behind the precise-input modal.
+    }
+
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, width, height, 0x88000000);
