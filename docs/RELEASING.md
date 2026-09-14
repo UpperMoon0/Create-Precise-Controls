@@ -2,11 +2,13 @@
 
 Releases follow the same version-specific changelog pattern used by the other NsTut mod repositories.
 
+Current release target: **0.1.1**.
+
 ## Release inputs
 
 A publishable release requires:
 
-- `mod_version` in the root `gradle.properties` set to a non-SNAPSHOT value such as `0.1.0`.
+- `mod_version` in the root `gradle.properties` set to a non-SNAPSHOT value such as `0.1.1`.
 - A matching `changelog/<version>.md` file.
 - Passing Forge 1.20.1 and NeoForge 1.21.1 builds/tests.
 - `CURSEFORGE_API_TOKEN` configured as a GitHub Actions secret before CurseForge publishing is enabled.
@@ -16,7 +18,7 @@ The root `CHANGELOG.md` is the human-readable history. Files under `changelog/` 
 
 ## Snapshot behavior
 
-Development versions such as `0.1.0-SNAPSHOT` are intentionally ignored by the release workflow. Pushing normal development commits to `main` must not create tags or releases.
+Development versions such as `0.1.2-SNAPSHOT` are intentionally ignored by the release workflow. Pushing normal development commits to `main` must not create tags or releases.
 
 ## Automatic release behavior
 
@@ -42,9 +44,10 @@ CurseForge publishing targets project `1696007`. Each supported loader/version i
 
 ## Preparing a release
 
-1. Update `CHANGELOG.md` so the version is no longer marked Unreleased and record the release date.
+1. Update `CHANGELOG.md` so the version is no longer marked Unreleased and record the release date when publishing.
 2. Review `changelog/<version>.md` as public release notes.
 3. Change `mod_version` from the snapshot to the exact release version.
 4. Update `README.md`, `CURSEFORGE.md`, and compatibility docs if support changed.
-5. Merge/push to `main` and let the release workflow publish.
-6. Start the next development cycle by bumping `mod_version` to the next `-SNAPSHOT` value.
+5. Complete required manual runtime verification for supported addon screens.
+6. Merge/push to `main` and let the release workflow publish.
+7. Start the next development cycle by bumping `mod_version` to the next `-SNAPSHOT` value.
