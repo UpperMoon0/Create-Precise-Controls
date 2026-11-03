@@ -26,10 +26,12 @@ Normal clicks and scrolling remain available.
 
 ## Requirements
 
-| Minecraft | Loader | Supported Create version |
+| Minecraft | Loader | Minimum Create version |
 | --- | --- | --- |
 | 1.20.1 | Forge | 6.0.8 |
 | 1.21.1 | NeoForge | 6.0.11 |
+
+The listed versions are minimums and tested build targets, not exact pins. Newer Create updates are accepted by loader metadata but must be tested for API and UI compatibility.
 
 **Create is required.** Factory Controller and FluidLogistics are optional.
 
