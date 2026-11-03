@@ -49,10 +49,12 @@ See the [compatibility guide](docs/COMPATIBILITY.md) for version-specific detail
 
 Install the matching Precise Controls jar on your client alongside Create.
 
-| Minecraft | Loader | Supported Create version |
+| Minecraft | Loader | Minimum Create version |
 | --- | --- | --- |
 | 1.20.1 | Forge | 6.0.8 |
 | 1.21.1 | NeoForge | 6.0.11 |
+
+The listed versions are minimums and tested build targets, not exact pins. Newer Create updates are accepted by loader metadata but must be tested for API and UI compatibility.
 
 Factory Controller and FluidLogistics are optional. The base Factory Gauge features work with Create alone.
 
