@@ -6,12 +6,12 @@ Current release: **0.1.1**.
 
 ## Base targets
 
-| Minecraft | Loader | Java | Create | Status |
+| Minecraft | Loader | Java | Create minimum / build target | Status |
 | --- | --- | --- | --- | --- |
 | 1.20.1 | Forge | 17 | 6.0.8 | Supported |
 | 1.21.1 | NeoForge | 21 | 6.0.11 | Supported |
 
-Create is required on every supported target.
+Create is required on every supported target. Its loader metadata declares a minimum version without an upper cap, while this matrix records the exact versions used to build and test the current release. Newer Create versions may change APIs; confirm the UI and optional addon bridges at runtime after upgrading.
 
 ## Development runtime coverage
 
