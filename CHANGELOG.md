@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0
+
+### Compatibility
+
+- Accept Create 6.0.8+ on Forge 1.20.1 and Create 6.0.11+ on NeoForge 1.21.1 without artificial upper-version pins.
+- Keep installed Create build targets and optional Factory Controller / FluidLogistics compatibility checks unchanged.
+- See [0.2.0 release notes](changelog/0.2.0.md). Verification against newer Create builds is required before claiming support for their APIs.
+
 Release-specific changelogs used by publishing automation live in [`changelog/`](changelog/).
 
 ## 0.1.1
